@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8" />
+
+<head>
+  <title>Show Boot Image Info</title>
+  <script src="KaitaiStream.js"></script>
+  <script src="AndroidImg.js"></script>
+</head>
+
+<body>
+  Select boot image:</br>
+  <input type="file" id="files" name="file" />
+  </br>
+  <output id="info"></output>
+
+  <script>
+    function add_line(name, value) {
+      return '<tr><td>' + name + '</td><td>' + value + '</td></tr>';
+    }
+
+    function to_hex(num) {
+      return '0x' + num.toString(16).toUpperCase().padStart(8, '0');
+    }
+
+    function handleFileSelect(evt) {
+      var file = evt.target.files[0];
+      var reader = new FileReader();
+
+      reader.onloadend = function (evt) {
+        if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+          var contents = evt.target.result;
+          var output = [];
+          var img;
+
+          try {
+            img = new AndroidImg(new KaitaiStream(contents));
+          } catch (e) {
+            document.getElementById('info').innerHTML = 'Error analysing the image: ' + e;
+            return;
+          }
+
+          output.push(add_line('header_version', img.headerVersion));
+
+          var os_version = img.osVersion;
+          output.push(add_line('os_version', os_version.major + '.' + os_version.minor + '.' + os_version.patch));
+          output.push(add_line('<b>os_patch_level</b>', '<b>' + os_version.year + '-' + os_version.month.toString().padStart(2, '0') + '</b>'));
+          if (img.name) {
+            output.push(add_line('board', img.name));
+          }
+          output.push(add_line('pagesize', img.pageSize));
+          if (img.cmdline) {
+            output.push(add_line('cmdline', img.cmdline));
+          }
+          if (img.extraCmdline) {
+            output.push(add_line('extra_cmdline', img.extraCmdline));
+          }
+          output.push(add_line('base', to_hex(img.base)));
+          output.push(add_line('kernel_offset', to_hex(img.kernelOffset)));
+          output.push(add_line('ramdisk_offset', to_hex(img.ramdiskOffset)));
+          output.push(add_line('second_offset', to_hex(img.secondOffset)));
+          output.push(add_line('tags_offset', to_hex(img.tagsOffset)));
+
+          document.getElementById('info').innerHTML = '<table border="1"><caption>Info</caption>' + output.join('') + '</table>';
+        }
+      };
+
+      reader.onerror = function (event) {
+        document.getElementById('info').innerHTML = 'Error analysing the image: ' + event.target.error.code;
+      };
+
+
+      const BOOT_IMAGE_HEADER_V1_SIZE = 1648;
+      const BOOT_IMAGE_HEADER_V2_SIZE = 1660;
+      reader.readAsArrayBuffer(file.slice(0, BOOT_IMAGE_HEADER_V2_SIZE));
+    }
+
+    document.getElementById('files').addEventListener('change', handleFileSelect, false);
+  </script>
+</body>
+
+</html>
