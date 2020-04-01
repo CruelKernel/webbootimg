@@ -35,7 +35,7 @@ var AndroidImg = (function() {
     this.sha = this._io.readBytes(32);
     this.extraCmdline = KaitaiStream.bytesToStr(KaitaiStream.bytesTerminate(this._io.readBytes(1024), 0, false), "ASCII");
     if (this.headerVersion > 0) {
-      this.recoveryDtbo = new LoadOffset(this._io, this, this._root);
+      this.recoveryDtbo = new SizeOffset(this._io, this, this._root);
     }
     if (this.headerVersion > 0) {
       this.bootHeaderSize = this._io.readU4le();
@@ -77,20 +77,20 @@ var AndroidImg = (function() {
     return LoadLong;
   })();
 
-  var LoadOffset = AndroidImg.LoadOffset = (function() {
-    function LoadOffset(_io, _parent, _root) {
+  var SizeOffset = AndroidImg.SizeOffset = (function() {
+    function SizeOffset(_io, _parent, _root) {
       this._io = _io;
       this._parent = _parent;
       this._root = _root || this;
 
       this._read();
     }
-    LoadOffset.prototype._read = function() {
+    SizeOffset.prototype._read = function() {
       this.size = this._io.readU4le();
       this.offset = this._io.readU8le();
     }
 
-    return LoadOffset;
+    return SizeOffset;
   })();
 
   var OsVersion = AndroidImg.OsVersion = (function() {
@@ -158,6 +158,10 @@ var AndroidImg = (function() {
       return this._m_kernelImg;
     }
   });
+
+  /**
+   * tags offset from base
+   */
   Object.defineProperty(AndroidImg.prototype, 'tagsOffset', {
     get: function() {
       if (this._m_tagsOffset !== undefined)
@@ -166,22 +170,34 @@ var AndroidImg = (function() {
       return this._m_tagsOffset;
     }
   });
+
+  /**
+   * ramdisk offset from base
+   */
   Object.defineProperty(AndroidImg.prototype, 'ramdiskOffset', {
     get: function() {
       if (this._m_ramdiskOffset !== undefined)
         return this._m_ramdiskOffset;
-      this._m_ramdiskOffset = (this.ramdisk.addr - this.base);
+      this._m_ramdiskOffset = (this.ramdisk.addr > 0 ? (this.ramdisk.addr - this.base) : 0);
       return this._m_ramdiskOffset;
     }
   });
+
+  /**
+   * 2nd bootloader offset from base
+   */
   Object.defineProperty(AndroidImg.prototype, 'secondOffset', {
     get: function() {
       if (this._m_secondOffset !== undefined)
         return this._m_secondOffset;
-      this._m_secondOffset = (this.second.addr - this.base);
+      this._m_secondOffset = (this.second.addr > 0 ? (this.second.addr - this.base) : 0);
       return this._m_secondOffset;
     }
   });
+
+  /**
+   * kernel offset from base
+   */
   Object.defineProperty(AndroidImg.prototype, 'kernelOffset', {
     get: function() {
       if (this._m_kernelOffset !== undefined)
@@ -190,12 +206,16 @@ var AndroidImg = (function() {
       return this._m_kernelOffset;
     }
   });
+
+  /**
+   * dtb offset from base
+   */
   Object.defineProperty(AndroidImg.prototype, 'dtbOffset', {
     get: function() {
       if (this._m_dtbOffset !== undefined)
         return this._m_dtbOffset;
       if (this.headerVersion > 1) {
-        this._m_dtbOffset = (this.dtb.addr - this.base);
+        this._m_dtbOffset = (this.dtb.addr > 0 ? (this.dtb.addr - this.base) : 0);
       }
       return this._m_dtbOffset;
     }
@@ -252,6 +272,10 @@ var AndroidImg = (function() {
       return this._m_secondImg;
     }
   });
+
+  /**
+   * base loading address
+   */
   Object.defineProperty(AndroidImg.prototype, 'base', {
     get: function() {
       if (this._m_base !== undefined)
