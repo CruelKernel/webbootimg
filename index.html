@@ -6,21 +6,33 @@
   <title>Show Boot Image Info</title>
   <script src="KaitaiStream.js"></script>
   <script src="AndroidImg.js"></script>
+  <style>
+    table {
+      border: 4px double black;
+      border-collapse: collapse;
+      font-family: monospace;
+    }
+    th {
+      text-align: left;
+      background: #ccc;
+      padding: 5px;
+      border: 1px solid black;
+    }
+    td {
+      padding: 3px;
+      border: 1px solid black;
+    }
+  </style>
 </head>
 
 <body>
   <center>
-  <h1>Show Boot Image Info</h1>
-  <br></br>
-  <h2>Select boot image</h2>
-  <br></br>
-  <br></br>
-  <input type="file" id="files" name="file" />
-  <br></br>
-  <br></br>
-  <output id="info"></output>
-  <br></br>
-  <br></br></center>
+    <h1>Show Boot Image Info</h1>
+    </br>
+    Select boot image: <input type="file" id="files" name="file" />
+    </br>
+    <output id="info"></output>
+  </center>
 
   <script>
     function add_line(name, value) {
@@ -69,7 +81,7 @@
           output.push(add_line('second_offset', to_hex(img.secondOffset)));
           output.push(add_line('tags_offset', to_hex(img.tagsOffset)));
 
-          document.getElementById('info').innerHTML = '<table border="1"><caption>Info</caption>' + output.join('') + '</table>';
+          document.getElementById('info').innerHTML = '<table border="1"><tr><th>mkbootimg</th><th>argument value</th></tr>' + output.join('') + '</table>';
         }
       };
 
