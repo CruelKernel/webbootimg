@@ -86,6 +86,7 @@
           let ext      = name.substring(sep);
           link.download = basename + '_' + input_date + ext;
           link.click();
+          delete link;
           document.getElementById('patch').disabled = true;
         }
       };
