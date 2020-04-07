@@ -35,7 +35,7 @@
     </br>
     <div id="patch_block" style="display:none">
       <label for="os_patch_level">Patch to new date:</label>
-      <input type="month" id="os_patch_level" name="os_patch_level" min="2000-01" max="2128-12" value="2020-01" pattern="[0-9]{4}-[0-9]{2}" onchange="enable_patch_button(event);"/>
+      <input type="month" id="os_patch_level" name="os_patch_level" min="2000-01" max="2127-12" value="2020-01" pattern="2[01][0-9]{2}-[01][0-9]" onchange="enable_patch_button(event);"/>
       <input type="button" id="patch" value="Patch" accesskey="p" disabled onclick="patch_image(event);"/>
       </br>
     </div>
@@ -46,7 +46,8 @@
     var boot_img_file;
 
     function patch_image(e) {
-      if (!document.getElementById('os_patch_level').checkValidity()) {
+      if (!is_valid_patch_level()) {
+        alert("Incorrect date.");
         return;
       }
 
@@ -63,14 +64,15 @@
           console.log(to_hex(os_version));
           console.log(month);
           console.log(year);
-          let new_date = new Date(input_date);
+          let new_year = input_date.substr(0, 4);
+          let new_month = input_date.substr(5, 2);
 
-          if (new_date.getFullYear() == year && month == (new_date.getMonth() + 1)) {
+          if (new_year == year && month == new_month) {
             alert("Nothing to be done: os_patch_level is the same.");
             return;
           }
 
-          let new_os_version = (android_version << 11) | ((new_date.getFullYear() - 2000) << 4) | (new_date.getMonth() + 1);
+          let new_os_version = (android_version << 11) | ((new_year - 2000) << 4) | new_month;
           console.log(to_hex(new_os_version));
           data.setUint32(44, new_os_version, 1);
 
@@ -92,10 +94,22 @@
       };
 
       reader.readAsArrayBuffer(boot_img_file);
-   }
+    }
+
+    function is_valid_patch_level() {
+      if (document.getElementById('os_patch_level').checkValidity()) {
+        let input_date = document.getElementById('os_patch_level').value;
+        let year = input_date.substr(0, 4);
+        let month = input_date.substr(5, 2);
+	if (2000 <= year && year <= 2127 && 1 <= month && month <= 12) {
+          return true;
+        }
+      }
+      return false;
+    }
 
     function enable_patch_button(e) {
-      if (document.getElementById('os_patch_level').checkValidity()) {
+      if (is_valid_patch_level()) {
         document.getElementById('patch').disabled = false;
       }
     }
