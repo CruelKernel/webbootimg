@@ -76,7 +76,7 @@
           console.log(to_hex(new_os_version));
           data.setUint32(44, new_os_version, 1);
 
-          let blob = new Blob([data], {type: boot_img_file.type});
+          let blob = new Blob([data], {type: "application/x-raw-disk-image"});
           let link = document.createElement('a');
           link.href = url.createObjectURL(blob);
 
